@@ -10,8 +10,7 @@ class Model:
         self.device = device
         data['Label'] = data["Label"].apply(lambda x: 1 if x == "bad" else 0)
         data = shuffle(data)
-        print(data)
-
+        data["URL"].replace("https://", "").replace("http//", "").replace("www.", "")
         self.maxLen = 100
         # Tokeniser
         self.tokeniser = tf.keras.preprocessing.text.Tokenizer()
@@ -19,8 +18,10 @@ class Model:
         self.sequences = self.tokeniser.texts_to_sequences(data["URL"])
         if os.path.exists("./model.keras"):
             self.model = tf.keras.models.load_model("./model.keras")
+            print("Model loaded")
         elif data is not None:
             with tf.device(self.device):
+                print("Training new model")
                 self.model = tf.keras.models.Sequential([
                     tf.keras.layers.Embedding(input_dim=len(self.tokeniser.word_index) + 1, output_dim=128),
                     tf.keras.layers.LSTM(128, dropout=0.2, recurrent_dropout=0.2),

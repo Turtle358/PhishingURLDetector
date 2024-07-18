@@ -8,5 +8,5 @@ if __name__ == '__main__':
     else:
         device = "/CPU:0"
     model = Model(device=device, data=pd.read_csv("./phishing_site_urls.csv"))
-
-    print(model.predict(input("Please enter your url: ")))
+    while True:
+        print(model.predict(input("Please enter your url: ")))
