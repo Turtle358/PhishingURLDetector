@@ -9,4 +9,9 @@ if __name__ == '__main__':
         device = "/CPU:0"
     model = Model(device=device, data=pd.read_csv("./phishing_site_urls.csv"))
     while True:
-        print(model.predict(input("Please enter your url: ")))
+        prediction = model.predict(input("Please enter your url: ").replace("https://", "").replace("www.", ""))
+        if prediction > 0.5:
+            danger = "Likely Scam"
+        else:
+            danger = "Likely Safe"
+        print(f"Rating: {str(round(prediction,4)*100)}%, Danger: {danger}")

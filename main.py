@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 import os
+import shutil
 from sklearn.utils import shuffle
 
 
@@ -52,7 +53,7 @@ class Model:
         padded = tf.keras.preprocessing.sequence.pad_sequences(seq, maxlen=self.maxLen)
         with tf.device(self.device):
             prediction = self.model.predict(padded)
-        return prediction
+        return prediction[0][0]
 
 
 if __name__ == "__main__":
@@ -63,4 +64,12 @@ if __name__ == "__main__":
     print(device)
     data = pd.read_csv("./phishing_site_urls.csv")
     model = Model(device, data)
-    model.training(epochs=int(input("Enter how many epochs to train: ")))
+    epochs = int(input("How many epochs would you like to train? "))
+    epochs5 = epochs // 5
+    epochsRemainder = epochs % 5
+    for i in range(epochs5):
+        model.training(epochs=5)
+        if not os.path.exists("./models"):
+            os.mkdir("./models")
+        shutil.copy("./model.keras",f"./models/model_{epochs5}.keras")
+    model.training(epochs=epochsRemainder)
