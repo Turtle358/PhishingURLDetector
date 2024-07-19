@@ -68,6 +68,7 @@ if __name__ == "__main__":
     epochs5 = epochs // 5
     epochsRemainder = epochs % 5
     for i in range(epochs5):
+        print(f"Epoch {i*5+1} of {epochs}")
         model.training(epochs=5)
         if not os.path.exists("./models"):
             os.mkdir("./models")
