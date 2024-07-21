@@ -1,0 +1,18 @@
+{
+  "manifest_version": 2,
+  "name": "Text Checker",
+  "version": "1.0",
+  "description": "Enter text and check it with an API",
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "http://127.0.0.1:5000/"
+  ]
+}

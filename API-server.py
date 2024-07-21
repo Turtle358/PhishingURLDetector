@@ -1,12 +1,14 @@
 from main import Model
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import tensorflow as tf
 import pandas as pd
-
 
 class webServer:
     def __init__(self):
         self.app = Flask(__name__)
+        CORS(self.app)  # Enable CORS
+
         if len(tf.config.experimental.list_physical_devices('GPU')):
             device = "/GPU:0"
         else:
@@ -27,7 +29,7 @@ class webServer:
 
     def processData(self, text):
         prediction, danger = self.model.predict(text)
-        prediction = str(prediction*100)
+        prediction = str(round(prediction * 100, 2))
         output = {
             'prediction': prediction,
             'danger': danger
@@ -36,7 +38,6 @@ class webServer:
 
     def run(self):
         self.app.run(debug=True)
-
 
 if __name__ == "__main__":
     server = webServer()
