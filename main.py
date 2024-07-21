@@ -1,9 +1,10 @@
+from sklearn.utils import shuffle
+import tensorflow as tf
 import pandas as pd
 import numpy as np
-import tensorflow as tf
-import os
+import pyfiglet
 import shutil
-from sklearn.utils import shuffle
+import os
 
 
 class Model:
@@ -63,19 +64,20 @@ class Model:
 if __name__ == "__main__":
     if len(tf.config.experimental.list_physical_devices('GPU')):
         device = "/GPU:0"
+        print(pyfiglet.figlet_format("GPU"))
     else:
         device = "/CPU:0"
-    print(device)
+        print(pyfiglet.figlet_format("CPU"))
     data = pd.read_csv("./phishing_site_urls.csv")
     model = Model(device, data)
     epochs = int(input("How many epochs would you like to train? "))
     epochs5 = epochs // 5
     epochsRemainder = epochs % 5
     for i in range(epochs5):
-        print(f"Epoch {i*5} of {epochs}")
+        print(f"Chunk {i+1} of {epochs5 + (1 if epochsRemainder else 0)}")
         model.training(epochs=5)
         if not os.path.exists("./models"):
             os.mkdir("./models")
         print(f"Creating snapshot for model to be saved in ./models/model_{i}.keras")
-        shutil.copy("./model.keras",f"./models/model_{i}.keras")
+        shutil.copy("./model.keras", f"./models/model_{i}.keras")
     model.training(epochs=epochsRemainder)
