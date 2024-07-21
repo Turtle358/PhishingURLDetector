@@ -30,7 +30,7 @@ async function handleCheck() {
 
     const data = await response.json();
     console.log('API response:', data);
-    outputDiv.innerText = `Prediction: ${data.prediction}, Danger: ${data.danger}`;
+    outputDiv.innerText = `Prediction: ${data.prediction}%, Danger: ${data.danger}`;
   } catch (error) {
     console.error('Fetch error:', error);
     outputDiv.innerText = `Error: ${error.message}`;
