@@ -53,7 +53,11 @@ class Model:
         padded = tf.keras.preprocessing.sequence.pad_sequences(seq, maxlen=self.maxLen)
         with tf.device(self.device):
             prediction = self.model.predict(padded)
-        return prediction[0][0]
+        if prediction > 0.5:
+            danger = "Likely Scam"
+        else:
+            danger = "Likely Safe"
+        return prediction[0][0], danger
 
 
 if __name__ == "__main__":
@@ -68,9 +72,10 @@ if __name__ == "__main__":
     epochs5 = epochs // 5
     epochsRemainder = epochs % 5
     for i in range(epochs5):
-        print(f"Epoch {i*5+1} of {epochs}")
+        print(f"Epoch {i*5} of {epochs}")
         model.training(epochs=5)
         if not os.path.exists("./models"):
             os.mkdir("./models")
-        shutil.copy("./model.keras",f"./models/model_{epochs5}.keras")
+        print(f"Creating snapshot for model to be saved in ./models/model_{i}.keras")
+        shutil.copy("./model.keras",f"./models/model_{i}.keras")
     model.training(epochs=epochsRemainder)
