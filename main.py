@@ -61,7 +61,9 @@ class Model:
         padded = tf.keras.preprocessing.sequence.pad_sequences(seq, maxlen=self.maxLen)
         with tf.device(self.device):
             prediction = self.model.predict(padded)
-        if prediction > 0.5:
+        if prediction > 0.9:
+            danger = "Highly likely Scam"
+        elif prediction > 0.5:
             danger = "Likely Scam"
         else:
             danger = "Likely Safe"

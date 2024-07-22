@@ -39,7 +39,7 @@ body {
 }
 
 /* Button hover effect */
-#checkButton:hover {
+#checkButton:hover{
   background-color: #3700b3; /* Darker button background on hover */
 }
 

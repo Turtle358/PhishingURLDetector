@@ -36,9 +36,14 @@ class WebServer:
 
     def processData(self, text):
         prediction, danger = self.model.predict(text)
-        prediction = str(round(prediction * 100, 2))
+        predictions = []
+        for i in range(2):
+            predictions.append(round(prediction * 100, 2))
+        prediction = str(sum(predictions)//2)
+        worstCase = max(predictions)
         output = {
             'prediction': prediction,
+            "worstCase": worstCase,
             'danger': danger
         }
         return output
