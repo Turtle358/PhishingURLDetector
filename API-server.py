@@ -7,7 +7,7 @@ import tarfile
 import os
 
 
-class webServer:
+class WebServer:
     def __init__(self):
         self.app = Flask(__name__)
         CORS(self.app)  # Enable CORS
