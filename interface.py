@@ -7,7 +7,7 @@ if __name__ == '__main__':
         device = "/GPU:0"
     else:
         device = "/CPU:0"
-    model = Model(device=device, data=pd.read_csv("./phishing_site_urls.csv"))
+    model = Model(device=device, data=pd.read_csv("./PhiUSIIL_Phishing_URL_Dataset.csv"))
     while True:
         prediction, danger = model.predict(input("Please enter your url: ").replace("https://", "").replace("www.", ""))
 

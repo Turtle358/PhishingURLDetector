@@ -3,6 +3,7 @@ import tensorflow as tf
 import pandas as pd
 import numpy as np
 import pyfiglet
+import tarfile
 import shutil
 import os
 
@@ -15,6 +16,7 @@ class Model:
 
         # Drop rows with NaN values in 'numeric_column'
         data.dropna(subset=['TLDLegitimateProb'], inplace=True)
+        data["TLDLegitimateProb"] = 1 - data["TLDLegitimateProb"]
         data['TLDLegitimateProb'] = data['TLDLegitimateProb'].astype(float).round().astype(int)
         data = shuffle(data)
         data["URL"].replace("https://", "").replace("http//", "").replace("www.", "")
@@ -67,6 +69,10 @@ class Model:
 
 
 if __name__ == "__main__":
+    if not os.path.exists("./PhiUSIIL_Phishing_URL_Dataset.csv"):
+        print("Decompressing file")
+        with tarfile.open("./dataset.tar.gz", 'r:gz') as tar:
+            tar.extractall(path="./")
     if len(tf.config.experimental.list_physical_devices('GPU')):
         device = "/GPU:0"
         print(pyfiglet.figlet_format("GPU"))

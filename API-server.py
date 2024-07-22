@@ -3,6 +3,8 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import tensorflow as tf
 import pandas as pd
+import tarfile
+import os
 
 
 class webServer:
@@ -14,7 +16,11 @@ class webServer:
             device = "/GPU:0"
         else:
             device = "/CPU:0"
-        self.model = Model(device, data=pd.read_csv("./phishing_site_urls.csv"))
+        if not os.path.exists("./PhiUSIIL_Phishing_URL_Dataset.csv"):
+            print("Decompressing file")
+            with tarfile.open("./dataset.tar.gz", 'r:gz') as tar:
+                tar.extractall(path="./")
+        self.model = Model(device, data=pd.read_csv("./PhiUSIIL_Phishing_URL_Dataset.csv"))
 
         # Define the route within the constructor
         self.app.route("/process", methods=["POST"])(self.process)
@@ -39,6 +45,7 @@ class webServer:
 
     def run(self):
         self.app.run(debug=True)
+
 
 if __name__ == "__main__":
     server = webServer()
