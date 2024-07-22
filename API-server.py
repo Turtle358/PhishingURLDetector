@@ -4,6 +4,7 @@ from flask_cors import CORS
 import tensorflow as tf
 import pandas as pd
 
+
 class webServer:
     def __init__(self):
         self.app = Flask(__name__)

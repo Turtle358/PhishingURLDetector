@@ -10,7 +10,12 @@ import os
 class Model:
     def __init__(self, device, data=None):
         self.device = device
-        data['Label'] = data["Label"].apply(lambda x: 1 if x == "bad" else 0)
+        # data['Label'] = data["Label"].apply(lambda x: 1 if x == "bad" else 0)
+        data['TLDLegitimateProb'] = pd.to_numeric(data["TLDLegitimateProb"], errors='coerce')
+
+        # Drop rows with NaN values in 'numeric_column'
+        data.dropna(subset=['TLDLegitimateProb'], inplace=True)
+        data['TLDLegitimateProb'] = data['TLDLegitimateProb'].astype(float).round().astype(int)
         data = shuffle(data)
         data["URL"].replace("https://", "").replace("http//", "").replace("www.", "")
         self.maxLen = 100
@@ -35,7 +40,7 @@ class Model:
 
     def training(self, epochs):
         X = tf.keras.preprocessing.sequence.pad_sequences(self.sequences, maxlen=self.maxLen)
-        y = np.array(data["Label"])
+        y = np.array(data["TLDLegitimateProb"])
 
         splitRatio = 0.8
         splitIndex = int(len(X) * splitRatio)
@@ -68,7 +73,7 @@ if __name__ == "__main__":
     else:
         device = "/CPU:0"
         print(pyfiglet.figlet_format("CPU"))
-    data = pd.read_csv("./phishing_site_urls.csv")
+    data = pd.read_csv("./PhiUSIIL_Phishing_URL_Dataset.csv")
     model = Model(device, data)
     epochs = int(input("How many epochs would you like to train? "))
     epochs5 = epochs // 5
