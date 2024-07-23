@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
-  "name": "Link Checker",
+  "name": "Text Checker",
   "version": "1.0",
-  "description": "Extracts and checks all links from the current page",
+  "description": "Enter text and check it with an API",
   "browser_action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -13,14 +13,6 @@
   },
   "permissions": [
     "activeTab",
-    "webRequest",
-    "<all_urls>"
-  ],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_end"
-    }
+    "http://127.0.0.1:5000/"
   ]
 }
