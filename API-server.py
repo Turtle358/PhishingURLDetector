@@ -35,7 +35,7 @@ class WebServer:
         return jsonify(result)
 
     def processData(self, text):
-        prediction, danger, Warn = self.model.predict(text)
+        prediction, danger = self.model.predict(text)
         predictions = []
         for i in range(2):
             predictions.append(round(prediction * 100, 2))
@@ -44,8 +44,7 @@ class WebServer:
         output = {
             'prediction': prediction,
             "worstCase": worstCase,
-            'danger': danger,
-            "Warn": Warn
+            'danger': danger
         }
         return output
 
