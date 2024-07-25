@@ -3,7 +3,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         let url = message.url;
         checkURL(url).then(prediction => {
             console.log(`Prediction for ${url}: ${prediction}`);  // Add this log
-            if (prediction > 0.7) {
+            if (prediction > 70) {
                 browser.tabs.create({
                     url: browser.runtime.getURL('warning.html') + '?url=' + encodeURIComponent(url) + '&prediction=' + encodeURIComponent(prediction)
                 });

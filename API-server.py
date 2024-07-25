@@ -41,6 +41,7 @@ class WebServer:
             predictions.append(round(prediction * 100, 2))
         prediction = str(sum(predictions)//2)
         worstCase = max(predictions)
+        print(text, prediction)
         output = {
             'prediction': prediction,
             "worstCase": worstCase,
