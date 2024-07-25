@@ -19,5 +19,16 @@
   ],
   "background": {
     "scripts": ["background.js"]
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content_script.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    "warning.html",
+    "warning.js"
+  ],
+  "content_security_policy": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
 }
