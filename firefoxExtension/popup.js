@@ -1,7 +1,7 @@
 document.getElementById('checkButton').addEventListener('click', handleCheck);
 document.getElementById('inputText').addEventListener('keypress', function(event) {
   if (event.key === 'Enter') {
-    event.preventDefault();  // Prevents the default Enter key behavior (e.g., form submission)
+    event.preventDefault();
     handleCheck();
   }
 });

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Warning</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Warning</h1>
+    <p>The link you clicked may be unsafe.</p>
+    <p><a id="continue-link" href="#">Click here</a> to continue to the site.</p>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const url = params.get('url');
+        document.getElementById('continue-link').href = url;
+    </script>
+</body>
+</html>
