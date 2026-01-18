@@ -1,57 +1,44 @@
-from main import Model, normaliseSingleURL
+from main import Model
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import tensorflow as tf
-import pandas as pd
-import tarfile
-import os
 
 
 class WebServer:
     def __init__(self):
         self.app = Flask(__name__)
-        CORS(self.app)  # Enable CORS
+        CORS(self.app)
 
-        if len(tf.config.experimental.list_physical_devices('GPU')):
-            device = "/GPU:0"
-        else:
-            device = "/CPU:0"
-        if not os.path.exists("./PhiUSIIL_Phishing_URL_Dataset.csv"):
-            print("Decompressing file")
-            with tarfile.open("./dataset.tar.gz", 'r:gz') as tar:
-                tar.extractall(path="./")
-        self.model = Model(device, data=pd.read_csv("./PhiUSIIL_Phishing_URL_Dataset.csv"))
+        # Detect device
+        device = "/GPU:0" if tf.config.experimental.list_physical_devices('GPU') else "/CPU:0"
+        print("Initialising model and loading saved state...")
+        self.model = Model(device, data=None)
 
-        # Define the route within the constructor
         self.app.route("/process", methods=["POST"])(self.process)
 
     def process(self):
         data = request.get_json()
         if not data or 'text' not in data:
-            return jsonify({'error': 'Invalid input'}), 400
+            return jsonify({'error': 'No URL provided'}), 400
 
-        text = data['text']
-        result = self.processData(text)
+        url = data['text']
+        result = self.processData(url)
         return jsonify(result)
 
-    def processData(self, text):
-        text = normaliseSingleURL(text)
-        prediction, danger = self.model.predict(text)
-        predictions = []
-        for i in range(2):
-            predictions.append(round(prediction * 100, 2))
-        prediction = str(sum(predictions)//2)
-        worstCase = float(max(predictions))
-        print(text, prediction)
-        output = {
-            'prediction': prediction,
-            "worstCase": worstCase,
-            'danger': danger
+    def processData(self, url):
+        predictionVal, dangerMsg = self.model.predict(url)#
+        percentage = round(float(predictionVal) * 100, 2)
+
+        print(f"URL: {url} | Score: {percentage}% | Status: {dangerMsg}")
+
+        return {
+            'prediction': str(percentage),
+            'worstCase': percentage,
+            'danger': dangerMsg
         }
-        return output
 
     def run(self):
-        self.app.run(debug=True)
+        self.app.run(debug=True, port=5000)
 
 
 if __name__ == "__main__":
