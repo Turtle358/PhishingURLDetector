@@ -66,7 +66,7 @@ class Model:
 
         # Callback to save the best version based on validation accuracy
         checkpoint = tf.keras.callbacks.ModelCheckpoint(
-            filepath='./PhishingURLDetector/model.keras',
+            filepath='./PhishingURLDetector/model_latest_checkpoint.keras',
             monitor='val_accuracy',
             save_best_only=True,
             mode='max'
@@ -84,7 +84,7 @@ class Model:
 
         loss, accuracy = self.model.evaluate(self.XTest, self.yTest)
         print(f"\nFinal Test Evaluation - Loss: {loss:.4f}, Accuracy: {accuracy:.4f}")
-        self.model.save("model.keras")
+        self.model.save("./PhishingURLDetector/model.keras")
 
     def predict(self, url):
         clean_url = normaliseSingleURL(url)
