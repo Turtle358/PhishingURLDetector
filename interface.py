@@ -1,6 +1,6 @@
 import tensorflow as tf
 import pandas as pd
-from main import Model
+from main import Model, normaliseSingleURL
 
 if __name__ == '__main__':
     if len(tf.config.experimental.list_physical_devices('GPU')):
@@ -9,6 +9,6 @@ if __name__ == '__main__':
         device = "/CPU:0"
     model = Model(device=device, data=pd.read_csv("./PhiUSIIL_Phishing_URL_Dataset.csv"))
     while True:
-        prediction, danger = model.predict(input("Please enter your url: ").replace("https://", "").replace("www.", ""))
+        prediction, danger = model.predict(normaliseSingleURL(input("Please enter your url: ")))
 
         print(f"Rating: {str(round(prediction,4)*100)}%, Danger: {danger}")

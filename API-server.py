@@ -1,4 +1,4 @@
-from main import Model
+from main import Model, normaliseSingleURL
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import tensorflow as tf
@@ -35,12 +35,13 @@ class WebServer:
         return jsonify(result)
 
     def processData(self, text):
+        text = normaliseSingleURL(text)
         prediction, danger = self.model.predict(text)
         predictions = []
         for i in range(2):
             predictions.append(round(prediction * 100, 2))
         prediction = str(sum(predictions)//2)
-        worstCase = max(predictions)
+        worstCase = float(max(predictions))
         print(text, prediction)
         output = {
             'prediction': prediction,

@@ -1,96 +1,129 @@
 from sklearn.utils import shuffle
 import tensorflow as tf
 import pandas as pd
-import numpy as np
 import pyfiglet
 import tarfile
-import shutil
 import os
 
 
 class Model:
     def __init__(self, device, data=None):
         self.device = device
-        # data['Label'] = data["Label"].apply(lambda x: 1 if x == "bad" else 0)
-        data['TLDLegitimateProb'] = pd.to_numeric(data["TLDLegitimateProb"], errors='coerce')
-
-        # Drop rows with NaN values in 'numeric_column'
-        data.dropna(subset=['TLDLegitimateProb'], inplace=True)
-        data["TLDLegitimateProb"] = 1 - data["TLDLegitimateProb"]
-        data['TLDLegitimateProb'] = data['TLDLegitimateProb'].astype(float).round().astype(int)
-        data = shuffle(data)
-        data["URL"].replace("https://", "").replace("http//", "").replace("www.", "")
         self.maxLen = 100
-        # Tokeniser
-        self.tokeniser = tf.keras.preprocessing.text.Tokenizer()
-        self.tokeniser.fit_on_texts(data["URL"])
-        self.sequences = self.tokeniser.texts_to_sequences(data["URL"])
+
+        if data is not None:
+            # 1. Pre-processing and Normalisation
+            data['TLDLegitimateProb'] = pd.to_numeric(data["TLDLegitimateProb"], errors='coerce')
+            data.dropna(subset=['TLDLegitimateProb', 'URL'], inplace=True)
+
+            # Binary conversion (Inverting logic as per your request: 1 is likely scam)
+            data["label"] = (1 - data["TLDLegitimateProb"]).round().astype(int)
+
+            # Apply Normalisation to the URL column
+            data['URL'] = self.normaliseStringSeries(data['URL'])
+            data = shuffle(data)
+
+            # 2. Character-Level Tokeniser
+            self.tokeniser = tf.keras.preprocessing.text.Tokenizer(char_level=True, lower=True)
+            self.tokeniser.fit_on_texts(data["URL"])
+
+            sequences = self.tokeniser.texts_to_sequences(data["URL"])
+            X = tf.keras.preprocessing.sequence.pad_sequences(sequences, maxlen=self.maxLen)
+            y = data["label"].values
+
+            # 3. Static Train/Test Split (Prevent Data Leakage)
+            split_idx = int(len(X) * 0.8)
+            self.XTrain, self.XTest = X[:split_idx], X[split_idx:]
+            self.yTrain, self.yTest = y[:split_idx], y[split_idx:]
+
         if os.path.exists("./model.keras"):
             self.model = tf.keras.models.load_model("./model.keras")
-            print("Model loaded")
+            print("Model loaded from disk")
         elif data is not None:
             with tf.device(self.device):
-                print("Training new model")
+                print("Building Hybrid CNN-LSTM Architecture")
                 self.model = tf.keras.models.Sequential([
                     tf.keras.layers.Embedding(input_dim=len(self.tokeniser.word_index) + 1, output_dim=128),
-                    tf.keras.layers.LSTM(128, dropout=0.2, recurrent_dropout=0.2),
+                    # CNN catches local patterns like 'login-' or '.exe'
+                    tf.keras.layers.Conv1D(filters=64, kernel_size=5, activation='relu'),
+                    tf.keras.layers.MaxPooling1D(pool_size=4),
+                    # Bidirectional LSTM catches long-term dependencies
+                    tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, dropout=0.2)),
+                    tf.keras.layers.Dense(64, activation='relu'),
                     tf.keras.layers.Dense(1, activation='sigmoid')
                 ])
                 self.model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
         else:
-            raise Exception("No data provided/ no model found")
+            raise Exception("No data provided and no saved model found.")
+
+    def normaliseStringSeries(self, series):
+        """Used for training dataframes"""
+        return series.str.lower().str.replace('www.', '', regex=False).str.rstrip('/')
+
 
     def training(self, epochs):
-        X = tf.keras.preprocessing.sequence.pad_sequences(self.sequences, maxlen=self.maxLen)
-        y = np.array(data["TLDLegitimateProb"])
+        if not os.path.exists("./models"):
+            os.mkdir("./models")
 
-        splitRatio = 0.8
-        splitIndex = int(len(X) * splitRatio)
-        XTrain, XTest = X[:splitIndex], X[splitIndex:]
-        yTrain, yTest = y[:splitIndex], y[splitIndex:]
+        # Callback to save the best version based on validation accuracy
+        checkpoint = tf.keras.callbacks.ModelCheckpoint(
+            filepath='./PhishingURLDetector/model.keras',
+            monitor='val_accuracy',
+            save_best_only=True,
+            mode='max'
+        )
 
         with tf.device(self.device):
-            self.model.fit(XTrain, yTrain, epochs=epochs, batch_size=64, validation_split=0.1)
+            self.model.fit(
+                self.XTrain,
+                self.yTrain,
+                epochs=epochs,
+                batch_size=64,
+                validation_data=(self.XTest, self.yTest),
+                callbacks=[checkpoint]
+            )
 
-        loss, accuracy = self.model.evaluate(XTest, yTest)
-        print(f"Loss: {loss:.4f}, Accuracy: {accuracy:.4f}")
+        loss, accuracy = self.model.evaluate(self.XTest, self.yTest)
+        print(f"\nFinal Test Evaluation - Loss: {loss:.4f}, Accuracy: {accuracy:.4f}")
         self.model.save("model.keras")
 
     def predict(self, url):
-        seq = self.tokeniser.texts_to_sequences([url])
+        clean_url = normaliseSingleURL(url)
+        seq = self.tokeniser.texts_to_sequences([clean_url])
         padded = tf.keras.preprocessing.sequence.pad_sequences(seq, maxlen=self.maxLen)
+
         with tf.device(self.device):
-            prediction = self.model.predict(padded)
-        if prediction >= 0.9:
+            prediction = self.model.predict(padded)[0][0]
+
+        if prediction >= 0.8:
             danger = "Highly likely Scam"
         elif prediction > 0.5:
             danger = "Likely Scam"
         else:
             danger = "Likely Safe"
-        return prediction[0][0], danger
+        return prediction, danger
 
+def normaliseSingleURL(url):
+    """Used for single predictions"""
+    return url.lower().replace('www.', '').rstrip('/')
 
 if __name__ == "__main__":
+    # Ensure dataset exists
     if not os.path.exists("./PhiUSIIL_Phishing_URL_Dataset.csv"):
-        print("Decompressing file")
-        with tarfile.open("./dataset.tar.gz", 'r:gz') as tar:
-            tar.extractall(path="./")
-    if len(tf.config.experimental.list_physical_devices('GPU')):
-        device = "/GPU:0"
-        print(pyfiglet.figlet_format("GPU"))
-    else:
-        device = "/CPU:0"
-        print(pyfiglet.figlet_format("CPU"))
-    data = pd.read_csv("./PhiUSIIL_Phishing_URL_Dataset.csv")
-    model = Model(device, data)
-    epochs = int(input("How many epochs would you like to train? "))
-    epochs5 = epochs // 5
-    epochsRemainder = epochs % 5
-    for i in range(epochs5):
-        print(f"Chunk {i+1} of {epochs5 + (1 if epochsRemainder else 0)}")
-        model.training(epochs=5)
-        if not os.path.exists("./models"):
-            os.mkdir("./models")
-        print(f"Creating snapshot for model to be saved in ./models/model_{i}.keras")
-        shutil.copy("./model.keras", f"./models/model_{i}.keras")
-    model.training(epochs=epochsRemainder)
+        if os.path.exists("./dataset.tar.gz"):
+            print("Decompressing dataset...")
+            with tarfile.open("./dataset.tar.gz", 'r:gz') as tar:
+                tar.extractall(path="./")
+        else:
+            print("Dataset not found!")
+
+    # Device selection
+    device = "/GPU:0" if tf.config.experimental.list_physical_devices('GPU') else "/CPU:0"
+    print(pyfiglet.figlet_format(device.split(":")[0][1:]))
+
+    # Initialise and Train
+    raw_data = pd.read_csv("./PhiUSIIL_Phishing_URL_Dataset.csv")
+    phish_model = Model(device, raw_data)
+
+    user_epochs = int(input("Enter total training epochs: "))
+    phish_model.training(epochs=user_epochs)
