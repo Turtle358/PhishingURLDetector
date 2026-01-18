@@ -16,9 +16,6 @@ class Model:
             data['TLDLegitimateProb'] = pd.to_numeric(data["TLDLegitimateProb"], errors='coerce')
             data.dropna(subset=['TLDLegitimateProb', 'URL'], inplace=True)
 
-            # Binary conversion (Inverting logic as per your request: 1 is likely scam)
-            # data["label"] = (1 - data["TLDLegitimateProb"]).round().astype(int)
-            # Ensure labels are ONLY 0 or 1
             data["label"] = (1 - data["TLDLegitimateProb"]).apply(lambda x: 1 if x > 0.5 else 0)
 
             # Apply Normalisation to the URL column
