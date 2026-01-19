@@ -15,12 +15,12 @@ class Model:
         if os.path.exists(self.tokeniserPath):
             with open(self.tokeniserPath, 'rb') as handle:
                 self.tokeniser = pickle.load(handle)
-            print("Tokenizer loaded from disk")
+            print("Tokeniser loaded from disk")
         elif data is not None:
             self.tokeniser = tf.keras.preprocessing.text.Tokenizer(char_level=True, lower=True)
-            print("Creating new Tokenizer...")
+            print("Creating new Tokeniser...")
         else:
-            raise Exception("No tokenizer found and no data to create one.")
+            raise Exception("No tokeniser found and no data to create one.")
 
         if data is not None:
             # Pre-processing and Normalisation
